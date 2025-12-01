@@ -13,7 +13,7 @@ import Context from '../context';
 import { motion, useScroll, useAnimation } from 'framer-motion';
 
 const Header = () => {
-  const user = useSelector(state => state.user.user); // Correct
+  const user = useSelector(state => state.user.user);
   const dispatch = useDispatch();
   const [menuDisplay, setMenuDisplay] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -51,7 +51,7 @@ const Header = () => {
     };
   }, []);
 
-  // Logout function
+  // Logout
   const handleLogout = async () => {
     try {
       const fetchData = await fetch(SummaryApi.logout_user.url, {
@@ -201,6 +201,7 @@ const Header = () => {
                 My Orders
               </Link>
 
+              {/* Mobile Search */}
               <div className='flex items-center w-full border rounded-full shadow-sm pl-4'>
                 <input
                   type='text'
