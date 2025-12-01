@@ -1,4 +1,4 @@
-const backendDomin = "http://localhost:8080"
+const backendDomin = "https://buyzzar-backend-beta.vercel.app"
 
 const SummaryApi = {
     signUP : {
