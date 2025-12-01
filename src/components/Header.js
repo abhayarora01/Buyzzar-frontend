@@ -13,58 +13,50 @@ import Context from '../context';
 import { motion, useScroll, useAnimation } from 'framer-motion';
 
 const Header = () => {
-  const userFromRedux = useSelector(state => state.user.user);
-  const [user, setUser] = useState(userFromRedux);
+  const user = useSelector(state => state.user.user); // Get user from Redux
   const dispatch = useDispatch();
-  const [menuDisplay, setMenuDisplay] = useState(false);
-  const [mobileMenu, setMobileMenu] = useState(false);
   const context = useContext(Context);
   const navigate = useNavigate();
   const location = useLocation();
   const URLSearch = new URLSearchParams(location.search);
   const searchQuery = URLSearch.get("q") || "";
   const [search, setSearch] = useState(searchQuery);
-  const { scrollY } = useScroll();
-  const controls = useAnimation();
+  const [menuDisplay, setMenuDisplay] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
   const profileDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
-
-  // Sync local state with Redux
-  useEffect(() => {
-    setUser(userFromRedux);
-  }, [userFromRedux]);
+  const { scrollY } = useScroll();
+  const controls = useAnimation();
 
   // Animate header on scroll
   useEffect(() => {
-    return scrollY.onChange((y) => {
+    return scrollY.onChange(y => {
       controls.start({ y: y > 50 ? -100 : 0 });
     });
   }, [scrollY, controls]);
 
-  // Click outside dropdowns
+  // Close dropdowns when clicking outside
   useEffect(() => {
-    function handleClickOutside(event) {
+    const handleClickOutside = (event) => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
         setMenuDisplay(false);
       }
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
         setMobileMenu(false);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Logout
+  // Logout handler
   const handleLogout = async () => {
     try {
-      const fetchData = await fetch(SummaryApi.logout_user.url, {
+      const res = await fetch(SummaryApi.logout_user.url, {
         method: SummaryApi.logout_user.method,
         credentials: 'include',
       });
-      const data = await fetchData.json();
+      const data = await res.json();
       if (data.success) {
         toast.success(data.message);
         dispatch(setUserDetails(null));
@@ -72,16 +64,16 @@ const Header = () => {
       } else {
         toast.error(data.message);
       }
-    } catch (err) {
+    } catch {
       toast.error("Something went wrong during logout.");
     }
   };
 
   // Search handler
   const handleSearch = (e) => {
-    const { value } = e.target;
+    const value = e.target.value;
     setSearch(value);
-    navigate(value ? `/search?q=${value}` : "/search");
+    navigate(value ? `/search?q=${value}` : '/search');
   };
 
   return (
@@ -91,6 +83,7 @@ const Header = () => {
       initial={{ y: 0 }}
     >
       <div className='h-full container mx-auto flex items-center justify-between px-9'>
+
         {/* Logo */}
         <Link to="/" className='flex items-center gap-2'>
           <img
@@ -100,14 +93,14 @@ const Header = () => {
           />
         </Link>
 
-        {/* Search (desktop) */}
+        {/* Desktop Search */}
         <div className='hidden lg:flex items-center w-full max-w-md border rounded-full shadow-sm pl-4'>
           <input
             type='text'
             placeholder='Search your style...'
             className='w-full px-2 py-2 outline-none text-sm text-gray-700'
-            onChange={handleSearch}
             value={search}
+            onChange={handleSearch}
           />
           <button className='bg-black hover:bg-red-700 text-white px-4 py-3 rounded-r-full'>
             <GrSearch />
@@ -116,8 +109,9 @@ const Header = () => {
 
         {/* Cart, Profile, Hamburger */}
         <div className='flex items-center gap-4'>
+
           {/* Cart */}
-          {user?._id && (
+          {user?.token && (
             <Link to='/cart' className='text-2xl relative text-gray-700 hover:text-red-600'>
               <FaShoppingCart />
               <span className='bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs absolute -top-2 -right-3'>
@@ -129,16 +123,13 @@ const Header = () => {
           {/* Hamburger */}
           <button
             className='lg:hidden text-3xl text-gray-700 z-50'
-            onClick={(e) => {
-              e.stopPropagation();
-              setMobileMenu(prev => !prev);
-            }}
+            onClick={(e) => { e.stopPropagation(); setMobileMenu(prev => !prev); }}
           >
             <HiMenuAlt3 />
           </button>
 
           {/* Profile / Login */}
-          {user?._id ? (
+          {user?.token ? (
             <div className='hidden lg:block relative' ref={profileDropdownRef}>
               <div
                 className='text-3xl cursor-pointer relative'
@@ -150,9 +141,7 @@ const Header = () => {
                     className='w-10 h-10 rounded-full object-cover border border-gray-300'
                     alt={user.name}
                   />
-                ) : (
-                  <FaRegCircleUser />
-                )}
+                ) : <FaRegCircleUser />}
               </div>
 
               {menuDisplay && (
@@ -160,22 +149,16 @@ const Header = () => {
                   <p className='font-semibold text-gray-800 border-b pb-2'>
                     Hello, <span className="text-gray-800 uppercase">{user.name}</span>
                   </p>
-
                   {user?.role === ROLE.ADMIN && (
                     <Link to='/admin-panel/all-products' className='hover:bg-gray-100 px-3 py-2 rounded text-gray-700'>
                       Admin Panel
                     </Link>
                   )}
-
                   <Link to='/my-orders' className='hover:bg-gray-100 px-3 py-2 rounded text-gray-700'>
                     My Orders
                   </Link>
-
                   <button
-                    onClick={() => {
-                      handleLogout();
-                      setMenuDisplay(false);
-                    }}
+                    onClick={handleLogout}
                     className='bg-black text-white px-4 py-2 rounded-full hover:bg-red-700 transition-all'
                   >
                     Logout
@@ -197,7 +180,7 @@ const Header = () => {
       {/* Mobile Menu */}
       {mobileMenu && (
         <div className='lg:hidden bg-white w-full shadow-md p-4 absolute z-40 flex flex-col gap-3' ref={mobileMenuRef}>
-          {user?._id ? (
+          {user?.token ? (
             <>
               <p className='font-semibold text-gray-800 border-b pb-2'>
                 Hello, <span className="text-gray-800 uppercase">{user.name}</span>
@@ -213,8 +196,8 @@ const Header = () => {
                   type='text'
                   placeholder='Search your style...'
                   className='w-full px-2 py-2 outline-none text-sm text-gray-700'
-                  onChange={handleSearch}
                   value={search}
+                  onChange={handleSearch}
                 />
                 <button className='bg-black hover:bg-red-700 text-white px-4 py-3 rounded-r-full'>
                   <GrSearch />
@@ -222,10 +205,7 @@ const Header = () => {
               </div>
 
               <button
-                onClick={() => {
-                  handleLogout();
-                  setMobileMenu(false);
-                }}
+                onClick={() => { handleLogout(); setMobileMenu(false); }}
                 className='bg-black text-white px-4 py-2 rounded-full hover:bg-red-700 transition-all'
               >
                 Logout
