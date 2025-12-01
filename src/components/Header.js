@@ -13,7 +13,8 @@ import Context from '../context';
 import { motion, useScroll, useAnimation } from 'framer-motion';
 
 const Header = () => {
-  const user = useSelector(state => state.user.user);
+  const userFromRedux = useSelector(state => state.user.user);
+  const [user, setUser] = useState(userFromRedux);
   const dispatch = useDispatch();
   const [menuDisplay, setMenuDisplay] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -27,6 +28,11 @@ const Header = () => {
   const controls = useAnimation();
   const profileDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
+
+  // Sync local state with Redux
+  useEffect(() => {
+    setUser(userFromRedux);
+  }, [userFromRedux]);
 
   // Animate header on scroll
   useEffect(() => {
