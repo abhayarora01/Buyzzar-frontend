@@ -13,7 +13,7 @@ import Context from '../context';
 import { motion, useScroll, useAnimation } from 'framer-motion';
 
 const Header = () => {
-  const user = useSelector(state => state.user.userDetails); // make sure this matches your slice
+  const user = useSelector(state => state.user.user); // Correct
   const dispatch = useDispatch();
   const [menuDisplay, setMenuDisplay] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
