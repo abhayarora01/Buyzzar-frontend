@@ -1,9 +1,8 @@
-import logo from './logo.svg';
 import './App.css';
 import { Outlet } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useEffect, useState } from 'react';
 import SummaryApi from './common';
@@ -15,46 +14,58 @@ function App() {
   const dispatch = useDispatch();
   const [cartProductCount, setCartProductCount] = useState(0);
 
-  // ✅ Add token header
-  const getAuthHeader = () => {
-    const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
-    return token ? { Authorization: `Bearer ${token}` } : {};
+  const getToken = () => {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    return userInfo?.token;
   };
 
   const fetchUserDetails = async () => {
     try {
-      const dataResponse = await fetch(SummaryApi.current_user.url, {
+      const token = getToken();
+      if (!token) return;
+
+      const response = await fetch(SummaryApi.current_user.url, {
         method: SummaryApi.current_user.method,
         headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeader()  // 🔑 send token
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // <-- Send token
         },
       });
 
-      const dataApi = await dataResponse.json();
+      const dataApi = await response.json();
 
-      if (dataApi.success) {
+      if (response.ok && dataApi.success) {
         dispatch(setUserDetails(dataApi.data));
+      } else {
+        console.error('Failed to fetch user details:', dataApi.message);
       }
     } catch (err) {
-      console.error("fetchUserDetails error:", err);
+      console.error('Error fetching user details:', err);
     }
   };
 
   const fetchUserAddToCart = async () => {
     try {
-      const dataResponse = await fetch(SummaryApi.addToCartProductCount.url, {
+      const token = getToken();
+      if (!token) return;
+
+      const response = await fetch(SummaryApi.addToCartProductCount.url, {
         method: SummaryApi.addToCartProductCount.method,
         headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeader()  // 🔑 send token
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // <-- Send token
         },
       });
 
-      const dataApi = await dataResponse.json();
-      setCartProductCount(dataApi?.data?.count || 0);
+      const dataApi = await response.json();
+
+      if (response.ok && dataApi.success) {
+        setCartProductCount(dataApi?.data?.count || 0);
+      } else {
+        console.error('Failed to fetch cart count:', dataApi.message);
+      }
     } catch (err) {
-      console.error("fetchUserAddToCart error:", err);
+      console.error('Error fetching cart count:', err);
     }
   };
 
@@ -65,14 +76,16 @@ function App() {
 
   return (
     <>
-      <Context.Provider value={{
-        fetchUserDetails,
-        cartProductCount,
-        fetchUserAddToCart
-      }}>
-        <ToastContainer position='top-center' />
+      <Context.Provider
+        value={{
+          fetchUserDetails,
+          cartProductCount,
+          fetchUserAddToCart,
+        }}
+      >
+        <ToastContainer position="top-center" />
         <Header />
-        <main className='min-h-[calc(100vh-120px)] pt-20'>
+        <main className="min-h-[calc(100vh-120px)] pt-20">
           <Outlet />
         </main>
         <Footer />
