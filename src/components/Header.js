@@ -111,7 +111,7 @@ const Header = () => {
         {/* Cart, Profile, Hamburger */}
         <div className='flex items-center gap-4'>
           {/* Cart */}
-          {user?.token && (
+          {user?._id && (
             <Link to='/cart' className='text-2xl relative text-gray-700 hover:text-red-600'>
               <FaShoppingCart />
               <span className='bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs absolute -top-2 -right-3'>
@@ -132,7 +132,7 @@ const Header = () => {
           </button>
 
           {/* Profile / Login */}
-          {user?.token ? (
+          {user?._id ? (
             <div className='hidden lg:block relative' ref={profileDropdownRef}>
               <div
                 className='text-3xl cursor-pointer relative'
@@ -191,7 +191,7 @@ const Header = () => {
       {/* Mobile Menu */}
       {mobileMenu && (
         <div className='lg:hidden bg-white w-full shadow-md p-4 absolute z-40 flex flex-col gap-3' ref={mobileMenuRef}>
-          {user?.token ? (
+          {user?._id ? (
             <>
               <p className='font-semibold text-gray-800 border-b pb-2'>
                 Hello, <span className="text-gray-800 uppercase">{user.name}</span>
