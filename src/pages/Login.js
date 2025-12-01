@@ -37,27 +37,33 @@ const Login = () => {
             const dataApi = await dataResponse.json();
 
             if (dataApi.success) {
-                toast.success(dataApi.message);
+    toast.success(dataApi.message);
 
-                // ✅ Store user data in Redux & localStorage
-                const userData = {
-                    name: dataApi.name,
-                    email: dataApi.email,
-                    isAdmin: dataApi.isAdmin ? "ADMIN" : "GENERAL",  // ✅ Fixed
-                    token: dataApi.token
-                };
+    // ✅ Store complete user data in Redux & localStorage
+    const userData = {
+        _id: dataApi._id,                    // user ID
+        name: dataApi.name,
+        email: dataApi.email,
+        role: dataApi.isAdmin ? "ADMIN" : "GENERAL",
+        token: dataApi.token,
+        profilePic: dataApi.profilePic || "" // profile picture if available
+    };
 
-                dispatch(setUserDetails(userData));
-                localStorage.setItem('userInfo', JSON.stringify(userData));
+    // Store in Redux
+    dispatch(setUserDetails(userData));
+    // Store in localStorage (for page reload persistence)
+    localStorage.setItem('userInfo', JSON.stringify(userData));
 
-                fetchUserDetails();
-                fetchUserAddToCart();
+    // Fetch cart and user details
+    fetchUserDetails();
+    fetchUserAddToCart();
 
-                // ✅ Redirect based on admin status
-                navigate(dataApi.isAdmin ? '/admin-panel' : '/');
-            } else {
-                toast.error(dataApi.message);
-            }
+    // Redirect
+    navigate(dataApi.isAdmin ? '/admin-panel' : '/');
+} else {
+    toast.error(dataApi.message);
+}
+
         } catch (error) {
             toast.error("Something went wrong! Please try again.");
         }
