@@ -13,27 +13,29 @@ import Context from '../context';
 import { motion, useScroll, useAnimation } from 'framer-motion';
 
 const Header = () => {
-  const user = useSelector(state => state?.user?.user);
+  const user = useSelector(state => state.user.userDetails); // make sure this matches your slice
   const dispatch = useDispatch();
   const [menuDisplay, setMenuDisplay] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const context = useContext(Context);
   const navigate = useNavigate();
-  const searchInput = useLocation();
-  const URLSearch = new URLSearchParams(searchInput?.search);
-  const searchQuery = URLSearch.getAll("q");
+  const location = useLocation();
+  const URLSearch = new URLSearchParams(location.search);
+  const searchQuery = URLSearch.get("q") || "";
   const [search, setSearch] = useState(searchQuery);
   const { scrollY } = useScroll();
   const controls = useAnimation();
   const profileDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
 
+  // Animate header on scroll
   useEffect(() => {
     return scrollY.onChange((y) => {
       controls.start({ y: y > 50 ? -100 : 0 });
     });
   }, [scrollY, controls]);
 
+  // Click outside dropdowns
   useEffect(() => {
     function handleClickOutside(event) {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
@@ -49,21 +51,27 @@ const Header = () => {
     };
   }, []);
 
+  // Logout function
   const handleLogout = async () => {
-    const fetchData = await fetch(SummaryApi.logout_user.url, {
-      method: SummaryApi.logout_user.method,
-      credentials: 'include',
-    });
-    const data = await fetchData.json();
-    if (data.success) {
-      toast.success(data.message);
-      dispatch(setUserDetails(null));
-      navigate('/');
-    } else if (data.error) {
-      toast.error(data.message);
+    try {
+      const fetchData = await fetch(SummaryApi.logout_user.url, {
+        method: SummaryApi.logout_user.method,
+        credentials: 'include',
+      });
+      const data = await fetchData.json();
+      if (data.success) {
+        toast.success(data.message);
+        dispatch(setUserDetails(null));
+        navigate('/');
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      toast.error("Something went wrong during logout.");
     }
   };
 
+  // Search handler
   const handleSearch = (e) => {
     const { value } = e.target;
     setSearch(value);
@@ -77,6 +85,7 @@ const Header = () => {
       initial={{ y: 0 }}
     >
       <div className='h-full container mx-auto flex items-center justify-between px-9'>
+        {/* Logo */}
         <Link to="/" className='flex items-center gap-2'>
           <img
             src="/logoforappwhite.svg"
@@ -85,6 +94,7 @@ const Header = () => {
           />
         </Link>
 
+        {/* Search (desktop) */}
         <div className='hidden lg:flex items-center w-full max-w-md border rounded-full shadow-sm pl-4'>
           <input
             type='text'
@@ -98,17 +108,19 @@ const Header = () => {
           </button>
         </div>
 
+        {/* Cart, Profile, Hamburger */}
         <div className='flex items-center gap-4'>
-          {user?._id && (
+          {/* Cart */}
+          {user?.token && (
             <Link to='/cart' className='text-2xl relative text-gray-700 hover:text-red-600'>
               <FaShoppingCart />
               <span className='bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs absolute -top-2 -right-3'>
-                {context?.cartProductCount}
+                {context?.cartProductCount || 0}
               </span>
             </Link>
           )}
 
-          {/* Hamburger Toggle */}
+          {/* Hamburger */}
           <button
             className='lg:hidden text-3xl text-gray-700 z-50'
             onClick={(e) => {
@@ -119,14 +131,19 @@ const Header = () => {
             <HiMenuAlt3 />
           </button>
 
-          {user?._id ? (
+          {/* Profile / Login */}
+          {user?.token ? (
             <div className='hidden lg:block relative' ref={profileDropdownRef}>
               <div
                 className='text-3xl cursor-pointer relative'
                 onClick={() => setMenuDisplay(prev => !prev)}
               >
                 {user?.profilePic ? (
-                  <img src={user?.profilePic} className='w-10 h-10 rounded-full object-cover border border-gray-300' alt={user?.name} />
+                  <img
+                    src={user.profilePic}
+                    className='w-10 h-10 rounded-full object-cover border border-gray-300'
+                    alt={user.name}
+                  />
                 ) : (
                   <FaRegCircleUser />
                 )}
@@ -171,10 +188,10 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu */}
       {mobileMenu && (
         <div className='lg:hidden bg-white w-full shadow-md p-4 absolute z-40 flex flex-col gap-3' ref={mobileMenuRef}>
-          {user?._id ? (
+          {user?.token ? (
             <>
               <p className='font-semibold text-gray-800 border-b pb-2'>
                 Hello, <span className="text-gray-800 uppercase">{user.name}</span>
