@@ -6,19 +6,12 @@ const addToCart = async (e, id) => {
     e?.preventDefault();
 
     try {
-        // Get token from localStorage
-        const token = JSON.parse(localStorage.getItem("userInfo"))?.token;
-
-        if (!token) {
-            toast.error("Please login first to add product to cart");
-            return { success: false, message: "User not logged in" };
-        }
 
         const response = await fetch(SummaryApi.addToCartProduct.url, {
             method: SummaryApi.addToCartProduct.method,
+            credentials: "include",      // ✅ send cookies to backend
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`  // ✅ send token
             },
             body: JSON.stringify({ productId: id })
         });
